@@ -1,19 +1,29 @@
-/**
- * Cours OC
- */
-
 const express = require("express");
-
+// URL image
+const path = require('path');
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 // (ou bodyparser)
 const app = express();
+
+const userRoutes = require("./routes/user");
+const sauceRoutes = require("./routes/sauce");
+//const stuffRoutes = require("./routes/stuff");
+
 // connexion base de données
-
-/* ---------------------------
-accès à toutes les sortes CORPS de requetes au format JSON ?
-(ou bodyparser)
-*/
-app.use(express.json());
-
+dotenv.config({ path: "./config.env" });
+const DB = process.env.DATABASE.replace(
+    "<PASSWORD>",
+    process.env.DATABASE_PASSWORD
+);
+mongoose
+    .connect(DB, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+    })
+    .then(() => console.log("Connexion à MongoDB réussie :)"))
+    .catch(() => console.log("Connexion à MongoDB échouée..."));
 /* ---------------------------
 Ces headers permettent :
 d'accéder à notre API depuis n'importe quelle origine ( '*' ) ;
@@ -33,70 +43,22 @@ app.use((req, res, next) => {
     next();
 });
 
-//
-const UserSauce = require("./models/UserSauce");
-const Thing = require("./models/thing");
-
-app.post("/api/stuff", (req, res, next) => {
-    delete req.body._id;
-    const thing = new Thing({
-        ...req.body,
-    });
-    thing
-        .save()
-        .then(() => res.status(201).json({ message: "Objet enregistré !" }))
-        .catch((error) => res.status(400).json({ error }));
-});
-
-app.get("/api/stuff/:id", (req, res, next) => {
-    Thing.findOne({ _id: req.params.id })
-        .then((thing) => res.status(200).json(thing))
-        .catch((error) => res.status(404).json({ error }));
-});
-
-app.use("/api/stuff", (req, res, next) => {
-    Thing.find()
-        .then((things) => res.status(200).json(things))
-        .catch((error) => res.status(400).json({ error }));
-});
-
-// POST
-// endpoint : /api/auth/signup
-app.post("/api/userSauce/", (req, res, next) => {
-    delete req.body._id;
-    const userSauce = new UserSauce({
-        //email:req.body.email;
-        ...req.body,
-    });
-    userSauce
-        .save()
-        .then(() => res.status(201).json({ message: "UserSauce cree" }))
-        .catch((error) => res.status(400).json({ error }));
-});
+// cf P5
+app.use('/images', express.static(path.join(__dirname, 'images')));
+// ?
+// app.use(express.static("images"));
+// app.use(express.urlencoded({ extended: true }));
 
 /* ---------------------------
-Dans ce middleware, nous créons un groupe d'articles avec le schéma de données spécifique requis par le front-end. Nous envoyons ensuite ces articles sous la forme de données JSON, avec un code 200 pour une demande réussie.
+accès à toutes les sortes CORPS de requetes au format JSON ?
+(ou bodyparser)
 */
-app.get("/api/userSauce/:id", (req, res, next) => {
-    UserSauce.findOne({ _id: req.params.id })
-        .then((userSauce) => res.status(200).json(userSauce))
-        .catch((error) => res.status(404).json({ error }));
-});
-app.use("/api/userSauce/", (req, res, next) => {
-    UserSauce.find()
-        .then((usersSauce) => res.status(200).json(usersSauce))
-        .catch((error) => res.status(400).json({ error }));
-});
+app.use(express.json());
 
-//app.use("/api/auth", (req, res, next) => {
-// app.get("/api/auth/signup", (req, res, next) => {
-//     const user = [
-//         {
-//             email: "test@site.com",
-//             password: "motdepassehache",
-//         },
-//     ];
-//     res.status(200).json(user);
-// });
+// import stuff / route
+app.use("/api/auth", userRoutes);
+app.use("/api/sauces", sauceRoutes);
+//app.use("/api/sauce", sauceRoutes);
+//app.use("/api/stuff", stuffRoutes);
 
 module.exports = app;

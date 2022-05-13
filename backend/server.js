@@ -1,29 +1,9 @@
-/**
- * // Cours OC
- */
+const http = require('http');
+const app = require('./app');
 
-const http = require("http");
-const app = require("./app");
-
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-dotenv.config({ path: "./config.env" });
-const DB = process.env.DATABASE.replace(
-    "<PASSWORD>",
-    process.env.DATABASE_PASSWORD
-);
-mongoose
-    .connect(DB, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useFindAndModify: false,
-    })
-    .then(() => console.log("Connexion à MongoDB réussie !"))
-    // .then((con) => {
-    //     console.log(con.connections);
-    //     console.log("Connexion à MongoDB réussie !");
-    // });
-    .catch(() => console.log("Connexion à MongoDB échouée !"));
+// bug ?
+const cors = require('cors');
+app.use(cors());
 
 const normalizePort = (val) => {
     const port = parseInt(val, 10);
