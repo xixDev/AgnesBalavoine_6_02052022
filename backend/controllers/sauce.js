@@ -1,7 +1,7 @@
 const Sauce = require('../models/Sauce');
 const fs = require('fs');
 
-//new-sauce
+// create SAUCE
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
     delete sauceObject._id;
@@ -15,7 +15,7 @@ exports.createSauce = (req, res, next) => {
         .save()
         .then(() => {
             res.status(201).json({
-                message: 'Post Sauce saved successfully!',
+                message: 'Add sauce !',
             });
         })
         .catch((error) => {
@@ -25,6 +25,7 @@ exports.createSauce = (req, res, next) => {
         });
 };
 
+// get one SAUCE
 exports.getOneSauce = (req, res, next) => {
     Sauce.findOne({
         _id: req.params.id,
@@ -39,17 +40,7 @@ exports.getOneSauce = (req, res, next) => {
         });
 };
 
-/*----
-name: { type: String, required: true },
-    manufacturer: { type: String, required: true },
-    description: { type: String, required: true },
-    mainPepper: { type: String, required: true },
-    imageUrl: { type: String, required: true },
-    heat: { type: Number, required: true },
-    dislikes: { type: Number, required: true },
-    usersLiked: { type: Array, required: true },
-    usersDisliked: { type: Array, required: true },
-*/
+//  like/dislike SAUCE
 exports.rateSauce = (req, res, next) => {
     let likeRate = req.body.like;
     let userId = req.body.userId;
@@ -68,12 +59,7 @@ exports.rateSauce = (req, res, next) => {
     else if (likeRate === 0) {
         Sauce.findOne({ _id: sauceId })
             .then((sauce) => {
-                // ?????
-                // trouver userId requete = à valeur dans tableau usersLiked
-                if (Sauce.find({ usersLiked: req.body.userId })) {
-                    //if (Sauce.find({ usersLiked: userId })) {
-                    //if (Sauce.findOne({ usersLiked: userId })) {
-
+                if (sauce.usersLiked.includes(userId)) {
                     Sauce.updateOne(
                         { _id: sauceId },
                         {
@@ -87,10 +73,7 @@ exports.rateSauce = (req, res, next) => {
                                 .json({ message: `LIKE/DISLIKE no rate` })
                         )
                         .catch((error) => res.status(400).json({ error }));
-                }
-                // ?????req.body.userId
-                if (Sauce.find({ userDisLiked: req.body.userId })) {
-                    //
+                } else if (sauce.usersDisliked.includes(userId)) {
                     Sauce.updateOne(
                         { _id: req.params.id },
                         {
@@ -121,7 +104,7 @@ exports.rateSauce = (req, res, next) => {
     }
 };
 
-// 02
+// update SAUCE
 exports.modifySauce = (req, res, next) => {
     const sauceObject = req.file
         ? {
@@ -131,6 +114,7 @@ exports.modifySauce = (req, res, next) => {
               }`,
           }
         : { ...req.body };
+
     Sauce.updateOne(
         { _id: req.params.id },
         { ...sauceObject, _id: req.params.id }
@@ -147,13 +131,21 @@ exports.modifySauce = (req, res, next) => {
         });
 };
 
-// rateSauce
-//let rateArray = { likes, dislikes, usersLiked, usersDisliked };
-
-//
+// delete SAUCE
 exports.deleteSauce = (req, res, next) => {
     Sauce.findOne({ _id: req.params.id })
         .then((sauce) => {
+            if (!sauce) {
+                res.status(404).json({
+                    error: new Error('No such Sauce!'),
+                });
+            }
+            if (sauce.userId !== req.auth.userId) {
+                res.status(400).json({
+                    error: new Error('Unauthorized request!'),
+                });
+            }
+            // delete sauce and image
             const filename = sauce.imageUrl.split('/images/')[1];
             fs.unlink(`images/${filename}`, () => {
                 Sauce.deleteOne({ _id: req.params.id })
@@ -166,6 +158,7 @@ exports.deleteSauce = (req, res, next) => {
         .catch((error) => res.status(500).json({ error }));
 };
 
+// all SAUCE
 exports.getAllSauce = (req, res, next) => {
     Sauce.find()
         .then((sauces) => {
