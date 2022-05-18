@@ -2,8 +2,10 @@
 
 # start : 02/05/22
 
-# finish : 00/00/22
+# finish : 16/05/22
 
-# xix : https//www.xix.name
+# xix
 
-github : https://github.com/xixDev
+frontend & backend : npm start
+
+github : https://github.com/xixDev/AgnesBalavoine_6_02052022
